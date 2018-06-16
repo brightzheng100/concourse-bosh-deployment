@@ -86,7 +86,7 @@
             authorized-grant-types: client_credentials
             scope: ""
             authorities: credhub.read,credhub.write
-            access-token-validity: 30
+            access-token-validity: 1200
             refresh-token-validity: 3600
             secret: ((concourse_to_credhub_secret))
         admin: {client_secret: ((uaa-admin))}
