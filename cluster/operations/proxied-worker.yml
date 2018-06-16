@@ -1,0 +1,47 @@
+# This ops file can provide one or more workers with proxy settings and dedicated tags, besides the default non-proxied workers
+
+# Variables
+# Note: if proxy settings contain credentials in URL, put the variables into BOSH Config Server (e.g. CredHub) first
+- type: replace
+  path: /variables?/name=http-proxy?
+  value:
+    name: http-proxy
+    type: password
+- type: replace
+  path: /variables?/name=http-proxy?
+  value:
+    name: http-proxy
+    type: password
+
+# Add new proxied worker instance
+- type: replace
+  path: /instance_groups/-
+  value:
+    name: worker-internet
+    instances: 1
+    azs: ((azs))
+    networks: [{name: ((network_name))}]
+    stemcell: trusty
+    vm_type: ((worker_vm_type))
+    jobs:
+    - release: concourse
+      name: groundcrew
+      consumes: {baggageclaim: {from: worker-internet-baggageclaim}}  # new link to consume
+      properties:
+        drain_timeout: 10m
+        tsa: {worker_key: ((worker_key))}
+        tags: ["internet"]                                            # new tag is required to differentiate the worker(s) from the default ones
+        http_proxy_url: ((http-proxy))                                # http-proxy
+        https_proxy_url: ((https-proxy))                              # https-proxy
+
+    - release: concourse
+      name: baggageclaim
+      properties: {log_level: debug}
+      provides: {baggageclaim: {as: worker-internet-baggageclaim}}    # new link to provide
+
+    - release: garden-runc
+      name: garden
+      properties:
+        garden:
+          listen_network: tcp
+          listen_address: 0.0.0.0:7777
