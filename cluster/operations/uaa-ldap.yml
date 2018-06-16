@@ -1,0 +1,60 @@
+# add LDAP integretion info to UAA job
+- type: replace
+  path: /instance_groups/name=web/jobs?name=uaa/properties/uaa/ldap?
+  value:
+    sslCertificate: ((uaa-ldap-ssl.certificate))
+    sslCertificateAlias:
+    mailAttributeName: mail
+    url: ((uaa-ldap-url))
+    searchBase: ((uaa-ldap-searchbase))
+    searchFilter: ((uaa-ldap-searchfilter))
+    enabled: true
+    emailDomain: []
+    referral: follow
+    groups:
+      profile_type: no-groups
+      searchBase:
+      groupSearchFilter: member={0}
+    userDN: ((uaa-ldap-userdn))
+    userPassword: ((uaa-ldap-user-password))
+
+- type: replace
+  path: /instance_groups/name=web/jobs?name=uaa/properties/uaa/clients?
+  value:
+    concourse_to_uaa:
+      override: true
+      authorized-grant-types: authorization_code,refresh_token
+      scope: "openid"
+      access-token-validity: 1200
+      refresh-token-validity: 3600
+      secret: ((concourse-to-uaa-secret))
+      redirect-url: ((external_url))/auth/oauth/callback
+
+# Variables
+- type: replace
+  path: /variables?/name=uaa-ldap-ssl?
+  value:
+    name: uaa-ldap-ssl
+    type: certificate
+    options:
+      is_ca: true
+      common_name: LDAP CA
+- type: replace
+  path: /variables?/name=uaa-ldap-user-password?
+  value:
+    name: uaa-ldap-user-password
+    type: password
+- type: replace
+  path: /variables?/name=concourse-to-uaa-secret?
+  value:
+    name: concourse-to-uaa-secret
+    type: password
+
+
+#After this, the command to 'set-team' is as below:
+#$ fly set-team -n sandbox \
+#    --generic-oauth-display-name 'sandbox' \
+#    --generic-oauth-client-id concourse_to_uaa \
+#    --generic-oauth-client-secret ((concourse-to-uaa-secret)) \
+#    --generic-oauth-auth-url https://<external_url>:8443/oauth/authorize \
+#    --generic-oauth-token-url https://oauth.example.com/oauth/token
