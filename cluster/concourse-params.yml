@@ -10,3 +10,10 @@ deployment_name: concourse
 atc_basic_auth_username: admin # the password will be generated in the cred file
 concourse_host: 10.244.0.100
 db_ip: 10.244.0.101
+
+#LDAP
+uaa-ldap-url: 
+uaa-ldap-searchbase: 
+uaa-ldap-searchfilter: mailNickname={0} # (&()())
+uaa-ldap-userdn: 
+#uaa-ldap-user-password: <PUT IT IN CREDHUB>
